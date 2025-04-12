@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Card, 
   CardContent, 
@@ -25,6 +25,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { HelpCircle } from "lucide-react";
+import MetricSelector from "./MetricSelector";
+import { PredefinedMetric } from "@/data/metrics";
 
 export type MetricType = "binomial" | "continuous" | "ratio";
 
@@ -60,6 +62,15 @@ const CalculatorForm = ({ onCalculate }: CalculatorFormProps) => {
     }));
   };
 
+  const handleMetricSelect = (metric: PredefinedMetric) => {
+    setFormData(prev => ({
+      ...prev,
+      metricType: metric.type,
+      baselineValue: metric.baselineValue,
+      standardDeviation: metric.standardDeviation || prev.standardDeviation,
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onCalculate(formData);
@@ -76,6 +87,8 @@ const CalculatorForm = ({ onCalculate }: CalculatorFormProps) => {
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
+            <MetricSelector onSelectMetric={handleMetricSelect} />
+
             <div>
               <Label htmlFor="metricType" className="text-sm font-medium flex items-center gap-2">
                 Metric Type
