@@ -20,12 +20,29 @@ const Results = ({ sampleSize, formData }: ResultsProps) => {
     return new Intl.NumberFormat().format(Math.round(num));
   };
 
+  // Function to get a human-readable correction method name
+  const getCorrectionMethodName = () => {
+    switch (formData.correctionMethod) {
+      case "bonferroni":
+        return "Bonferroni";
+      case "benjamini-hochberg":
+        return "Benjamini-Hochberg";
+      case "none":
+        return "no";
+      default:
+        return formData.correctionMethod;
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="bg-primary/5 border-b">
         <CardTitle>Results</CardTitle>
         <CardDescription>
-          Required sample size for your experiment (using t-test with {formData.variations > 1 ? 'Bonferroni correction' : 'no correction'})
+          Required sample size for your experiment 
+          {formData.variations > 1 
+            ? ` (using t-test with ${getCorrectionMethodName()} correction)` 
+            : ' (using t-test with no correction)'}
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-6 space-y-6">
@@ -94,6 +111,13 @@ const Results = ({ sampleSize, formData }: ResultsProps) => {
             
             <div className="font-medium">Number of Test Variations:</div>
             <div>{formData.variations}</div>
+
+            {formData.variations > 1 && (
+              <>
+                <div className="font-medium">Multiple Comparison Correction:</div>
+                <div>{getCorrectionMethodName()}</div>
+              </>
+            )}
           </div>
         </div>
 
@@ -109,8 +133,14 @@ const Results = ({ sampleSize, formData }: ResultsProps) => {
           {formData.variations > 1 && (
             <p className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
               <strong>Multiple Comparisons Note:</strong> Your sample size has been adjusted using 
-              Bonferroni correction to account for {formData.variations} test variations. This helps 
-              prevent false positives that can occur when testing multiple variations against a control.
+              {formData.correctionMethod === "bonferroni"
+                ? " Bonferroni correction, which controls the family-wise error rate"
+                : formData.correctionMethod === "benjamini-hochberg"
+                ? " Benjamini-Hochberg correction, which controls the false discovery rate"
+                : " no correction (not recommended)"}
+              {formData.correctionMethod !== "none" 
+                ? " to account for " + formData.variations + " test variations. This helps prevent false positives that can occur when testing multiple variations against a control."
+                : ". This may increase the risk of false positives when testing multiple variations."}
             </p>
           )}
         </div>

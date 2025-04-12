@@ -27,6 +27,7 @@ import {
 import { HelpCircle } from "lucide-react";
 import MetricSelector from "./MetricSelector";
 import { PredefinedMetric } from "@/data/metrics";
+import { CorrectionMethod } from "@/utils/statistics";
 
 export type MetricType = "binomial" | "continuous" | "ratio";
 
@@ -38,6 +39,7 @@ export interface CalculatorFormData {
   significance: number;
   power: number;
   variations: number;
+  correctionMethod: CorrectionMethod;
 }
 
 interface CalculatorFormProps {
@@ -53,6 +55,7 @@ const CalculatorForm = ({ onCalculate }: CalculatorFormProps) => {
     significance: 0.95,
     power: 0.8,
     variations: 1,
+    correctionMethod: "bonferroni",
   });
 
   const handleChange = (field: keyof CalculatorFormData, value: any) => {
@@ -149,6 +152,39 @@ const CalculatorForm = ({ onCalculate }: CalculatorFormProps) => {
                 <span className="w-16 text-right">{formData.variations}</span>
               </div>
             </div>
+
+            {formData.variations > 1 && (
+              <div>
+                <Label htmlFor="correctionMethod" className="text-sm font-medium flex items-center gap-2">
+                  Multiple Comparison Correction
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle size={16} className="text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>Bonferroni: More conservative, controls family-wise error rate</p>
+                        <p>Benjamini-Hochberg: Less conservative, controls false discovery rate</p>
+                        <p>None: No correction (not recommended for multiple comparisons)</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </Label>
+                <Select
+                  value={formData.correctionMethod}
+                  onValueChange={(value) => handleChange("correctionMethod", value as CorrectionMethod)}
+                >
+                  <SelectTrigger className="w-full mt-1">
+                    <SelectValue placeholder="Select correction method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bonferroni">Bonferroni</SelectItem>
+                    <SelectItem value="benjamini-hochberg">Benjamini-Hochberg</SelectItem>
+                    <SelectItem value="none">None (Not Recommended)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div>
               <Label htmlFor="baselineValue" className="text-sm font-medium flex items-center gap-2">

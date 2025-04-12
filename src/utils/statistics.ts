@@ -43,20 +43,43 @@ export const getInitialTScore = (confidenceLevel: number): number => {
   return T_SCORES[key] || 1.697; // Default to 95% confidence if not found
 };
 
+export type CorrectionMethod = "none" | "bonferroni" | "benjamini-hochberg";
+
 /**
- * Apply Bonferroni correction to the significance level based on number of comparisons
- * With multiple comparisons, we need to adjust the significance level to control the
- * familywise error rate.
+ * Apply multiple comparison correction based on the selected method
  */
-export const applyBonferroniCorrection = (significance: number, comparisons: number): number => {
+export const applyMultipleComparisonCorrection = (
+  significance: number, 
+  comparisons: number,
+  method: CorrectionMethod
+): number => {
   // If only one comparison (one variation vs control), no correction needed
-  if (comparisons <= 1) return significance;
+  if (comparisons <= 1 || method === "none") return significance;
   
-  // The corrected significance level
-  const correctedAlpha = 1 - Math.pow(1 - (1 - significance), 1/comparisons);
+  let correctedAlpha: number;
+  
+  switch (method) {
+    case "bonferroni":
+      // Bonferroni correction divides alpha by the number of comparisons
+      correctedAlpha = 1 - Math.pow(1 - (1 - significance), 1/comparisons);
+      break;
+    case "benjamini-hochberg":
+      // Benjamini-Hochberg is less conservative than Bonferroni
+      // It controls the False Discovery Rate (FDR) rather than Family-Wise Error Rate
+      // This is an approximation for the purpose of sample size calculation
+      correctedAlpha = 1 - (1 - significance) / (1 + comparisons * (1 - significance) / significance);
+      break;
+    default:
+      correctedAlpha = significance;
+  }
   
   // We never want the significance to go below 0.5 as it makes calculations unstable
   return Math.max(correctedAlpha, 0.5);
+};
+
+// For backward compatibility
+export const applyBonferroniCorrection = (significance: number, comparisons: number): number => {
+  return applyMultipleComparisonCorrection(significance, comparisons, "bonferroni");
 };
 
 /**
@@ -103,13 +126,14 @@ export const calculateBinomialSampleSize = (
   minimumDetectableEffect: number,
   significance: number,
   power: number,
-  variations: number = 1
+  variations: number = 1,
+  correctionMethod: CorrectionMethod = "bonferroni"
 ): number => {
   const p1 = baselineConversion / 100;
   const p2 = p1 * (1 + minimumDetectableEffect / 100);
   
-  // Apply Bonferroni correction for multiple comparisons
-  const correctedSignificance = applyBonferroniCorrection(significance, variations);
+  // Apply multiple comparison correction
+  const correctedSignificance = applyMultipleComparisonCorrection(significance, variations, correctionMethod);
   
   // Start with an initial estimate using z-scores
   let zalpha = getZScore(correctedSignificance);
@@ -150,12 +174,13 @@ export const calculateContinuousSampleSize = (
   minimumDetectableEffect: number,
   significance: number,
   power: number,
-  variations: number = 1
+  variations: number = 1,
+  correctionMethod: CorrectionMethod = "bonferroni"
 ): number => {
   const mde = minimumDetectableEffect / 100 * mean;
   
-  // Apply Bonferroni correction for multiple comparisons
-  const correctedSignificance = applyBonferroniCorrection(significance, variations);
+  // Apply multiple comparison correction
+  const correctedSignificance = applyMultipleComparisonCorrection(significance, variations, correctionMethod);
   
   // Start with an initial estimate using z-scores
   let sampleSize = Math.ceil(
@@ -191,14 +216,15 @@ export const calculateRatioSampleSize = (
   minimumDetectableEffect: number,
   significance: number,
   power: number,
-  variations: number = 1
+  variations: number = 1,
+  correctionMethod: CorrectionMethod = "bonferroni"
 ): number => {
   // For ratio metrics, we use a similar approach to continuous metrics
   // but account for the relative nature of the change
   const cv = standardDeviation / mean; // Coefficient of variation
   
-  // Apply Bonferroni correction for multiple comparisons
-  const correctedSignificance = applyBonferroniCorrection(significance, variations);
+  // Apply multiple comparison correction
+  const correctedSignificance = applyMultipleComparisonCorrection(significance, variations, correctionMethod);
   
   // Start with an initial estimate using z-scores
   let sampleSize = Math.ceil(

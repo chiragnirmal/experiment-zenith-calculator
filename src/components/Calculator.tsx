@@ -22,7 +22,8 @@ const Calculator = () => {
           data.minimumDetectableEffect,
           data.significance,
           data.power,
-          data.variations
+          data.variations,
+          data.correctionMethod
         );
         break;
       case "continuous":
@@ -35,7 +36,8 @@ const Calculator = () => {
           data.minimumDetectableEffect,
           data.significance,
           data.power,
-          data.variations
+          data.variations,
+          data.correctionMethod
         );
         break;
       case "ratio":
@@ -48,7 +50,8 @@ const Calculator = () => {
           data.minimumDetectableEffect,
           data.significance,
           data.power,
-          data.variations
+          data.variations,
+          data.correctionMethod
         );
         break;
       default:
