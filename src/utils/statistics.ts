@@ -44,6 +44,22 @@ export const getInitialTScore = (confidenceLevel: number): number => {
 };
 
 /**
+ * Apply Bonferroni correction to the significance level based on number of comparisons
+ * With multiple comparisons, we need to adjust the significance level to control the
+ * familywise error rate.
+ */
+export const applyBonferroniCorrection = (significance: number, comparisons: number): number => {
+  // If only one comparison (one variation vs control), no correction needed
+  if (comparisons <= 1) return significance;
+  
+  // The corrected significance level
+  const correctedAlpha = 1 - Math.pow(1 - (1 - significance), 1/comparisons);
+  
+  // We never want the significance to go below 0.5 as it makes calculations unstable
+  return Math.max(correctedAlpha, 0.5);
+};
+
+/**
  * Calculate t-value for a given degrees of freedom and alpha
  * Uses an approximation formula that is accurate to within 0.05 units for df > 10
  */
@@ -86,13 +102,17 @@ export const calculateBinomialSampleSize = (
   baselineConversion: number,
   minimumDetectableEffect: number,
   significance: number,
-  power: number
+  power: number,
+  variations: number = 1
 ): number => {
   const p1 = baselineConversion / 100;
   const p2 = p1 * (1 + minimumDetectableEffect / 100);
   
+  // Apply Bonferroni correction for multiple comparisons
+  const correctedSignificance = applyBonferroniCorrection(significance, variations);
+  
   // Start with an initial estimate using z-scores
-  let zalpha = getZScore(significance);
+  let zalpha = getZScore(correctedSignificance);
   let zbeta = getZScore(power);
   
   const sd1 = Math.sqrt(2 * p1 * (1 - p1));
@@ -110,7 +130,7 @@ export const calculateBinomialSampleSize = (
     const df = 2 * sampleSize - 2;
     
     // Calculate t-values based on current df estimate
-    const talpha = calculateTValue(df, significance);
+    const talpha = calculateTValue(df, correctedSignificance);
     const tbeta = calculateTValue(df, power);
     
     // Recalculate sample size with t-values
@@ -129,13 +149,17 @@ export const calculateContinuousSampleSize = (
   standardDeviation: number,
   minimumDetectableEffect: number,
   significance: number,
-  power: number
+  power: number,
+  variations: number = 1
 ): number => {
   const mde = minimumDetectableEffect / 100 * mean;
   
+  // Apply Bonferroni correction for multiple comparisons
+  const correctedSignificance = applyBonferroniCorrection(significance, variations);
+  
   // Start with an initial estimate using z-scores
   let sampleSize = Math.ceil(
-    2 * Math.pow(standardDeviation, 2) * Math.pow(getZScore(significance) + getZScore(power), 2) / 
+    2 * Math.pow(standardDeviation, 2) * Math.pow(getZScore(correctedSignificance) + getZScore(power), 2) / 
     Math.pow(mde, 2)
   );
   
@@ -145,7 +169,7 @@ export const calculateContinuousSampleSize = (
     const df = 2 * sampleSize - 2;
     
     // Calculate t-values based on current df estimate
-    const talpha = calculateTValue(df, significance);
+    const talpha = calculateTValue(df, correctedSignificance);
     const tbeta = calculateTValue(df, power);
     
     // Recalculate sample size with t-values
@@ -166,15 +190,19 @@ export const calculateRatioSampleSize = (
   standardDeviation: number,
   minimumDetectableEffect: number,
   significance: number,
-  power: number
+  power: number,
+  variations: number = 1
 ): number => {
   // For ratio metrics, we use a similar approach to continuous metrics
   // but account for the relative nature of the change
   const cv = standardDeviation / mean; // Coefficient of variation
   
+  // Apply Bonferroni correction for multiple comparisons
+  const correctedSignificance = applyBonferroniCorrection(significance, variations);
+  
   // Start with an initial estimate using z-scores
   let sampleSize = Math.ceil(
-    2 * Math.pow(cv, 2) * Math.pow(getZScore(significance) + getZScore(power), 2) / 
+    2 * Math.pow(cv, 2) * Math.pow(getZScore(correctedSignificance) + getZScore(power), 2) / 
     Math.pow(minimumDetectableEffect / 100, 2)
   );
   
@@ -184,7 +212,7 @@ export const calculateRatioSampleSize = (
     const df = 2 * sampleSize - 2;
     
     // Calculate t-values based on current df estimate
-    const talpha = calculateTValue(df, significance);
+    const talpha = calculateTValue(df, correctedSignificance);
     const tbeta = calculateTValue(df, power);
     
     // Recalculate sample size with t-values
@@ -196,4 +224,3 @@ export const calculateRatioSampleSize = (
   
   return sampleSize;
 };
-

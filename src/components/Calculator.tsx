@@ -21,7 +21,8 @@ const Calculator = () => {
           data.baselineValue,
           data.minimumDetectableEffect,
           data.significance,
-          data.power
+          data.power,
+          data.variations
         );
         break;
       case "continuous":
@@ -33,7 +34,8 @@ const Calculator = () => {
           data.standardDeviation,
           data.minimumDetectableEffect,
           data.significance,
-          data.power
+          data.power,
+          data.variations
         );
         break;
       case "ratio":
@@ -45,7 +47,8 @@ const Calculator = () => {
           data.standardDeviation,
           data.minimumDetectableEffect,
           data.significance,
-          data.power
+          data.power,
+          data.variations
         );
         break;
       default:

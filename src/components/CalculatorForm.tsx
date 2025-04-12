@@ -35,6 +35,7 @@ export interface CalculatorFormData {
   minimumDetectableEffect: number;
   significance: number;
   power: number;
+  variations: number;
 }
 
 interface CalculatorFormProps {
@@ -49,6 +50,7 @@ const CalculatorForm = ({ onCalculate }: CalculatorFormProps) => {
     minimumDetectableEffect: 10,
     significance: 0.95,
     power: 0.8,
+    variations: 1,
   });
 
   const handleChange = (field: keyof CalculatorFormData, value: any) => {
@@ -103,6 +105,36 @@ const CalculatorForm = ({ onCalculate }: CalculatorFormProps) => {
                   <SelectItem value="ratio">Ratio (RPM, ARPU)</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="variations" className="text-sm font-medium flex items-center gap-2">
+                Number of Variations (excluding control)
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle size={16} className="text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      How many test variations you want to compare against the control
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </Label>
+              <div className="flex items-center gap-4">
+                <Slider
+                  id="variations"
+                  min={1}
+                  max={10}
+                  step={1}
+                  className="flex-1"
+                  value={[formData.variations]}
+                  onValueChange={(values) =>
+                    handleChange("variations", values[0])
+                  }
+                />
+                <span className="w-16 text-right">{formData.variations}</span>
+              </div>
             </div>
 
             <div>
