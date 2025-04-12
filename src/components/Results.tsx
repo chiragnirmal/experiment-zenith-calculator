@@ -24,7 +24,7 @@ const Results = ({ sampleSize, formData }: ResultsProps) => {
       <CardHeader className="bg-primary/5 border-b">
         <CardTitle>Results</CardTitle>
         <CardDescription>
-          Required sample size for your experiment
+          Required sample size for your experiment (using t-test)
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-6 space-y-6">
@@ -90,7 +90,7 @@ const Results = ({ sampleSize, formData }: ResultsProps) => {
             With {formatNumber(sampleSize)} samples per variation ({formatNumber(totalSampleSize)} total), 
             you have a {formData.power * 100}% chance of detecting a {formData.minimumDetectableEffect}% 
             {formData.metricType === "binomial" ? " relative" : ""} change in your metric with 
-            {formData.significance * 100}% confidence.
+            {formData.significance * 100}% confidence using a t-test.
           </p>
         </div>
       </CardContent>
